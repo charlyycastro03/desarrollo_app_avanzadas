@@ -51,70 +51,118 @@
   }
 
   async function enumerateCameras() {
+  try {
+    // Asegura etiquetas de dispositivos pidiendo permiso una vez
+    try {
+      const tst = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      tst.getTracks().forEach(t => t.stop());
+    } catch (e) {
+      // Puede fallar si el usuario cancela; seguimos, pero quizá sin labels
+      logStatus('No se otorgó permiso aún; las cámaras pueden aparecer sin etiqueta.');
+    }
+
     const devices = await navigator.mediaDevices.enumerateDevices();
     const videos = devices.filter(d => d.kind === 'videoinput');
     els.cameraSelect.innerHTML = '';
+    if (!videos.length) {
+      const opt = document.createElement('option');
+      opt.textContent = 'No hay cámaras';
+      els.cameraSelect.appendChild(opt);
+      logStatus('No se detectaron cámaras (videoinput).');
+      return;
+    }
     videos.forEach((d, i) => {
       const opt = document.createElement('option');
       opt.value = d.deviceId;
       opt.textContent = d.label || `Cámara ${i+1}`;
       els.cameraSelect.appendChild(opt);
     });
-    if (!videos.length) {
-      const opt = document.createElement('option');
-      opt.textContent = 'No hay cámaras';
-      els.cameraSelect.appendChild(opt);
-    }
+    logStatus(`Detectadas ${videos.length} cámara(s).`);
+  } catch (err) {
+    logStatus('enumerateDevices falló: ' + (err.message || err));
   }
+}
+
 
   async function start() {
-    if (running) return;
-    try {
-      const constraints = {
-        audio: false,
-        video: {
-          deviceId: els.cameraSelect.value ? { exact: els.cameraSelect.value } : undefined,
-          facingMode: 'environment',
-          width: { ideal: 1280 }, height: { ideal: 720 }
-        }
-      };
-      stream = await navigator.mediaDevices.getUserMedia(constraints);
-      els.video.srcObject = stream;
-      track = stream.getVideoTracks()[0];
+  if (running) return;
 
-      await els.video.play();
-      resizeCanvas();
-      running = true;
-      els.btnStart.disabled = true;
-      els.btnStop.disabled = false;
-
-      if (hasBarcodeAPI) {
-        const formats = await window.BarcodeDetector.getSupportedFormats?.()
-          .catch(() => supportedFormatsDefault) || supportedFormatsDefault;
-        detector = new window.BarcodeDetector({ formats });
-      } else {
-        detector = null;
-      }
-
-      requestAnimationFrame(loop);
-      tryToggleTorch(true);
-    } catch (err) {
-      console.error(err);
-      alert('No se pudo iniciar la cámara: ' + (err.message || err));
-    }
+  if (!isSecureContext) {
+    alert('Debes abrir la página en https o http://localhost para usar la cámara.');
+    return;
+  }
+  if (!navigator.mediaDevices?.getUserMedia) {
+    alert('Este navegador no soporta getUserMedia.');
+    return;
   }
 
-  function stop() {
-    running = false;
-    els.btnStart.disabled = false;
-    els.btnStop.disabled = true;
-    if (track) { track.stop(); track = null; }
-    if (stream) {
-      stream.getTracks().forEach(t => t.stop());
+  const tryConstraints = [
+    // 1) Si el usuario eligió cámara específica
+    () => ({
+      audio: false,
+      video: els.cameraSelect.value ? { deviceId: { exact: els.cameraSelect.value }, width: { ideal: 1280 }, height: { ideal: 720 } } : false
+    }),
+    // 2) Trasera (ideal) en móvil
+    () => ({
+      audio: false,
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+    }),
+    // 3) Genérico (lo que haya)
+    () => ({
+      audio: false,
+      video: true
+    })
+  ].filter(f => f()); // elimina el #1 si no hay selección
+
+  let lastErr = null;
+  for (const make of tryConstraints) {
+    try {
+      const constraints = make();
+      logStatus('Intentando getUserMedia con constraints: ' + JSON.stringify(constraints));
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      break;
+    } catch (err) {
+      lastErr = err;
+      logStatus('Intento fallido: ' + (err.name || '') + ' - ' + (err.message || err));
       stream = null;
     }
-    clearOverlay();
   }
+  
+function stop() {
+  running = false;
+  els.btnStart.disabled = false;
+  els.btnStop.disabled = true;
+  if (track) { track.stop(); track = null; }
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  clearOverlay();
+  logStatus('Cámara detenida.');
+}
+  if (!stream) {
+    alert(explainGetUserMediaError(lastErr || new Error('No se pudo abrir la cámara')));
+    return;
+  }
+
+  els.video.srcObject = stream;
+  track = stream.getVideoTracks()[0];
+  await els.video.play();
+  resizeCanvas();
+  running = true;
+  els.btnStart.disabled = true;
+  els.btnStop.disabled = false;
+
+  if (hasBarcodeAPI) {
+    const formats = await window.BarcodeDetector.getSupportedFormats?.()
+      .catch(() => supportedFormatsDefault) || supportedFormatsDefault;
+    detector = new window.BarcodeDetector({ formats });
+  } else {
+    detector = null;
+    logStatus('BarcodeDetector no disponible; usa carga de imagen o agrega un fallback (ZXing).');
+  }
+
+  requestAnimationFrame(loop);
+  tryToggleTorch(true);
+}
+
 
   function resizeCanvas() {
     const rect = els.video.getBoundingClientRect();
