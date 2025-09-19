@@ -1,0 +1,91 @@
+:root {
+  --bg: #0f172a;        /* slate-900 */
+  --panel: #111827;     /* gray-900 */
+  --muted: #9ca3af;     /* gray-400 */
+  --text: #e5e7eb;      /* gray-200 */
+  --accent: #22c55e;    /* green-500 */
+  --accent-2: #60a5fa;  /* blue-400 */
+  --danger: #ef4444;    /* red-500 */
+  --ring: rgba(96,165,250,.35);
+  --radius: 16px;
+}
+* { box-sizing: border-box }
+html, body { height: 100% }
+body {
+  margin: 0; background: radial-gradient(1200px 800px at 20% 0%, #111827 0%, #0b1020 45%, #05070f 100%), var(--bg);
+  color: var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  display: grid; place-items: start center; padding: 24px;
+}
+.app {
+  width: min(1100px, 100%);
+  display: grid; gap: 16px;
+  grid-template-columns: 1.2fr .8fr;
+}
+@media (max-width: 900px) { .app { grid-template-columns: 1fr } }
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  overflow: clip;
+}
+.card-header { padding: 16px 18px; border-bottom: 1px solid rgba(255,255,255,.08); display:flex; align-items:center; gap:10px }
+.title { font-size: 18px; font-weight: 700; letter-spacing:.2px }
+.subtle { color: var(--muted); font-size: 13px }
+.controls { padding: 14px 18px; display:flex; flex-wrap: wrap; gap: 10px }
+.controls .group { display:flex; gap:10px; align-items:center }
+select, button, input[type="file"]::file-selector-button {
+  background: #0b1224; border: 1px solid rgba(255,255,255,.15);
+  color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 14px;
+  outline: none;
+}
+button {
+  cursor: pointer; border: 1px solid rgba(255,255,255,.12);
+  transition: transform .04s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+}
+button.primary { background: linear-gradient(180deg, #1e293b, #0f172a); border-color: rgba(96,165,250,.35) }
+button.primary:active { transform: translateY(1px) }
+button.success { border-color: rgba(34,197,94,.35) }
+button.danger { border-color: rgba(239,68,68,.35) }
+button:focus-visible { box-shadow: 0 0 0 4px var(--ring) }
+.video-wrap { position: relative; aspect-ratio: 16/10; background:#000; }
+video, canvas.overlay {
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.badges {
+  position:absolute; left:10px; bottom:10px; display:flex; gap:8px; flex-wrap:wrap;
+}
+.badge {
+  background: rgba(15,23,42,.75); border: 1px solid rgba(255,255,255,.15);
+  color: var(--text); padding: 6px 10px; border-radius: 999px; font-size:12px; backdrop-filter: blur(6px);
+}
+.right { padding: 10px }
+.list { max-height: 420px; overflow: auto; display: grid; gap: 10px; padding: 12px 14px }
+.item {
+  background: rgba(2,6,23,.6); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px; padding: 12px; display: grid; gap: 6px;
+}
+.code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; background: rgba(0,0,0,.35); padding: 6px 8px; border-radius: 8px; word-break: break-all }
+.row { display:flex; align-items:center; justify-content: space-between; gap: 12px; }
+.row .meta { display:flex; gap:8px; font-size:12px; color: var(--muted) }
+.actions { display:flex; gap:8px }
+.footer { padding: 10px 14px; border-top: 1px solid rgba(255,255,255,.08); display:flex; align-items:center; justify-content: space-between; gap:10px; flex-wrap:wrap }
+.hint { color: var(--muted); font-size: 12px }
+.hidden { display:none }
+.file { display:flex; align-items:center; gap:8px }
+.switch { display:inline-flex; align-items:center; gap:8px; font-size: 14px; color: var(--text) }
+.switch input { width: 42px; height: 24px; accent-color: var(--accent) }
+.error { color: #fecaca }
+/* Ya tienes la mayoría. Si quieres diferenciar ofertas: */
+.offer {
+  background: rgba(2,6,23,.6);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+}
+.offer .row { display:flex; justify-content: space-between; align-items: center; gap:12px; }
+.offer a { color: var(--accent-2); text-decoration: none; }
+.offer a:hover { text-decoration: underline; }
+.offer .price { font-weight: 700; }

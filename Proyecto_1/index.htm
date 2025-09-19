@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lector de Códigos de Barra</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- Lado izquierdo: cámara / lectura -->
+    <section class="card">
+      <div class="card-header">
+        <div class="title">Lector de Códigos</div>
+        <div class="subtle">EAN, Code-128, QR y más (si el navegador lo soporta)</div>
+      </div>
+
+      <div class="controls">
+        <div class="group">
+          <label for="cameraSelect" class="subtle">Cámara:</label>
+          <select id="cameraSelect"></select>
+        </div>
+        <div class="group">
+          <button id="btnStart" class="primary">▶ Iniciar</button>
+          <button id="btnStop" class="danger" disabled>■ Detener</button>
+        </div>
+        <div class="group">
+          <label class="switch">
+            <input type="checkbox" id="toggleTorch" />
+            Linterna
+          </label>
+        </div>
+        <div class="group file">
+          <input type="file" id="fileInput" accept="image/*" />
+          <span class="subtle">o carga una imagen…</span>
+        </div>
+      </div>
+
+      <div class="video-wrap">
+        <video id="video" playsinline muted></video>
+        <canvas class="overlay" id="overlay"></canvas>
+        <div class="badges">
+          <div class="badge" id="apiBadge">API: <strong>desconocido</strong></div>
+          <div class="badge">FPS: <span id="fps">0</span></div>
+          <div class="badge">Último: <span id="lastType">—</span></div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="hint">
+          Consejo: en móviles, prueba la cámara trasera. Requiere HTTPS o localhost.
+          <span id="compat" class="error"></span>
+        </div>
+        <div class="actions">
+          <button id="btnClear" class="">🧹 Limpiar</button>
+          <button id="btnCopyAll" class="success">📋 Copiar todo</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lado derecho: resultados -->
+    <aside class="card right">
+      <div class="card-header">
+        <div class="title">Resultados</div>
+        <div class="subtle" id="count">0 encontrados</div>
+      </div>
+      <div class="list" id="results"></div>
+    </aside>
+  </div>
+
+  <audio id="beep" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAZGF0YQAAAAAA" type="audio/wav">
+  </audio>
+
+  <script src="app.js" defer></script>
+<!-- Añade contenido de ofertas -->
+<div class="app">
+    <!-- IZQUIERDA: lector -->
+    <!-- (igual que ya lo tienes) -->
+
+    <!-- DERECHA: resultados de lectura -->
+    <aside class="card right">
+      <div class="card-header">
+        <div class="title">Resultados</div>
+        <div class="subtle" id="count">0 encontrados</div>
+      </div>
+      <div class="list" id="results"></div>
+    </aside>
+  </div>
+
+  <!-- NUEVO: Ofertas de compra -->
+  <section class="card" style="margin-top:16px; width:min(1100px,100%);">
+    <div class="card-header">
+      <div class="title">Dónde comprar</div>
+      <div class="subtle" id="offersStatus">Conecta un código o escribe y busco…</div>
+    </div>
+    <div class="controls">
+      <input id="manualQuery" placeholder="Buscar por nombre o código…" style="flex:1; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#0b1224; color:var(--text)" />
+      <button id="btnSearch" class="primary">🔎 Buscar</button>
+    </div>
+    <div class="list" id="offers"></div>
+  </section>
+
+  <!-- ...audio beep y script... -->
+  <script src="app.js" defer></script>
+
+
+  
+</body>
+</html>

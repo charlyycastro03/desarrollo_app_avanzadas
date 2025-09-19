@@ -1,157 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Lector de Códigos de Barra</title>
-<style>
-  :root {
-    --bg: #0f172a;        /* slate-900 */
-    --panel: #111827;     /* gray-900 */
-    --muted: #9ca3af;     /* gray-400 */
-    --text: #e5e7eb;      /* gray-200 */
-    --accent: #22c55e;    /* green-500 */
-    --accent-2: #60a5fa;  /* blue-400 */
-    --danger: #ef4444;    /* red-500 */
-    --ring: rgba(96,165,250,.35);
-    --radius: 16px;
-  }
-  * { box-sizing: border-box }
-  html, body { height: 100% }
-  body {
-    margin: 0; background: radial-gradient(1200px 800px at 20% 0%, #111827 0%, #0b1020 45%, #05070f 100%), var(--bg);
-    color: var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-    display: grid; place-items: start center; padding: 24px;
-  }
-  .app {
-    width: min(1100px, 100%);
-    display: grid; gap: 16px;
-    grid-template-columns: 1.2fr .8fr;
-  }
-  @media (max-width: 900px) { .app { grid-template-columns: 1fr } }
-  .card {
-    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
-    border: 1px solid rgba(255,255,255,.08);
-    border-radius: var(--radius);
-    box-shadow: 0 10px 30px rgba(0,0,0,.35);
-    overflow: clip;
-  }
-  .card-header { padding: 16px 18px; border-bottom: 1px solid rgba(255,255,255,.08); display:flex; align-items:center; gap:10px }
-  .title { font-size: 18px; font-weight: 700; letter-spacing:.2px }
-  .subtle { color: var(--muted); font-size: 13px }
-  .controls { padding: 14px 18px; display:flex; flex-wrap: wrap; gap: 10px }
-  .controls .group { display:flex; gap:10px; align-items:center }
-  select, button, input[type="file"]::file-selector-button {
-    background: #0b1224; border: 1px solid rgba(255,255,255,.15);
-    color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 14px;
-    outline: none;
-  }
-  button {
-    cursor: pointer; border: 1px solid rgba(255,255,255,.12);
-    transition: transform .04s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
-  }
-  button.primary { background: linear-gradient(180deg, #1e293b, #0f172a); border-color: rgba(96,165,250,.35) }
-  button.primary:active { transform: translateY(1px) }
-  button.success { border-color: rgba(34,197,94,.35) }
-  button.danger { border-color: rgba(239,68,68,.35) }
-  button:focus-visible { box-shadow: 0 0 0 4px var(--ring) }
-  .video-wrap { position: relative; aspect-ratio: 16/10; background:#000; }
-  video, canvas.overlay {
-    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-bottom: 1px solid rgba(255,255,255,.08);
-  }
-  .badges {
-    position:absolute; left:10px; bottom:10px; display:flex; gap:8px; flex-wrap:wrap;
-  }
-  .badge {
-    background: rgba(15,23,42,.75); border: 1px solid rgba(255,255,255,.15);
-    color: var(--text); padding: 6px 10px; border-radius: 999px; font-size:12px; backdrop-filter: blur(6px);
-  }
-  .right { padding: 10px }
-  .list { max-height: 420px; overflow: auto; display: grid; gap: 10px; padding: 12px 14px }
-  .item {
-    background: rgba(2,6,23,.6); border: 1px solid rgba(255,255,255,.08);
-    border-radius: 12px; padding: 12px; display: grid; gap: 6px;
-  }
-  .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; background: rgba(0,0,0,.35); padding: 6px 8px; border-radius: 8px; word-break: break-all }
-  .row { display:flex; align-items:center; justify-content: space-between; gap: 12px; }
-  .row .meta { display:flex; gap:8px; font-size:12px; color: var(--muted) }
-  .actions { display:flex; gap:8px }
-  .footer { padding: 10px 14px; border-top: 1px solid rgba(255,255,255,.08); display:flex; align-items:center; justify-content: space-between; gap:10px; flex-wrap:wrap }
-  .hint { color: var(--muted); font-size: 12px }
-  .hidden { display:none }
-  .file { display:flex; align-items:center; gap:8px }
-  .switch { display:inline-flex; align-items:center; gap:8px; font-size: 14px; color: var(--text) }
-  .switch input { width: 42px; height: 24px; accent-color: var(--accent) }
-  .error { color: #fecaca }
-</style>
-</head>
-<body>
-  <div class="app">
-    <!-- Lado izquierdo: cámara / lectura -->
-    <section class="card">
-      <div class="card-header">
-        <div class="title">Lector de Códigos</div>
-        <div class="subtle">EAN, Code-128, QR y más (si el navegador lo soporta)</div>
-      </div>
-
-      <div class="controls">
-        <div class="group">
-          <label for="cameraSelect" class="subtle">Cámara:</label>
-          <select id="cameraSelect"></select>
-        </div>
-        <div class="group">
-          <button id="btnStart" class="primary">▶ Iniciar</button>
-          <button id="btnStop" class="danger" disabled>■ Detener</button>
-        </div>
-        <div class="group">
-          <label class="switch">
-            <input type="checkbox" id="toggleTorch" />
-            Linterna
-          </label>
-        </div>
-        <div class="group file">
-          <input type="file" id="fileInput" accept="image/*" />
-          <span class="subtle">o carga una imagen…</span>
-        </div>
-      </div>
-
-      <div class="video-wrap">
-        <video id="video" playsinline muted></video>
-        <canvas class="overlay" id="overlay"></canvas>
-        <div class="badges">
-          <div class="badge" id="apiBadge">API: <strong>desconocido</strong></div>
-          <div class="badge">FPS: <span id="fps">0</span></div>
-          <div class="badge">Último: <span id="lastType">—</span></div>
-        </div>
-      </div>
-
-      <div class="footer">
-        <div class="hint">
-          Consejo: en móviles, prueba la cámara trasera. Requiere HTTPS o localhost.
-          <span id="compat" class="error"></span>
-        </div>
-        <div class="actions">
-          <button id="btnClear" class="">🧹 Limpiar</button>
-          <button id="btnCopyAll" class="success">📋 Copiar todo</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Lado derecho: resultados -->
-    <aside class="card right">
-      <div class="card-header">
-        <div class="title">Resultados</div>
-        <div class="subtle" id="count">0 encontrados</div>
-      </div>
-      <div class="list" id="results"></div>
-    </aside>
-  </div>
-
-  <audio id="beep" preload="auto">
-    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAZGF0YQAAAAAA" type="audio/wav">
-  </audio>
-
-<script>
 (() => {
   const hasBarcodeAPI = 'BarcodeDetector' in window;
   const supportedFormatsDefault = [
@@ -224,7 +70,6 @@
   async function start() {
     if (running) return;
     try {
-      // Preferir trasera si está disponible
       const constraints = {
         audio: false,
         video: {
@@ -252,7 +97,7 @@
       }
 
       requestAnimationFrame(loop);
-      tryToggleTorch(true); // intenta prender la linterna si estaba activada
+      tryToggleTorch(true);
     } catch (err) {
       console.error(err);
       alert('No se pudo iniciar la cámara: ' + (err.message || err));
@@ -289,18 +134,15 @@
     ctx.fillStyle = 'rgba(96,165,250,0.15)';
     for (const b of barcodes) {
       if (!b.boundingBox) continue;
-      // boundingBox está en CSS px del video; ajustamos a canvas esc.
+
       const vw = els.video.videoWidth, vh = els.video.videoHeight;
       const cw = els.overlay.width, ch = els.overlay.height;
-      // Mapeo simple: como usamos object-fit:cover, estimamos escalas:
       const vidRatio = vw / vh;
       const box = b.boundingBox;
 
-      // Calculamos draw area del video en el canvas
       const canvasRatio = cw / ch;
       let drawW, drawH, offsetX=0, offsetY=0;
       if (vidRatio > canvasRatio) {
-        // video más ancho que canvas: altura encaja
         drawH = ch; drawW = ch * vidRatio; offsetX = (cw - drawW) / 2;
       } else {
         drawW = cw; drawH = cw / vidRatio; offsetY = (ch - drawH) / 2;
@@ -312,12 +154,15 @@
       const w = box.width * scaleX;
       const h = box.height * scaleY;
 
-      ctx.strokeRect(x, y, w, h);
-      // etiqueta
+      // etiqueta: definir fuente antes de medir
       const label = b.format?.toUpperCase() || 'CODE';
-      ctx.fillRect(x, y - 28, ctx.measureText(label).width + 24, 24);
-      ctx.fillStyle = '#0b1224';
       ctx.font = `${14 * devicePixelRatio}px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
+      const textW = ctx.measureText(label).width;
+
+      ctx.strokeRect(x, y, w, h);
+      ctx.fillRect(x, y - 28, textW + 24, 24);
+
+      ctx.fillStyle = '#0b1224';
       ctx.fillText(label, x + 8, y - 10);
       ctx.fillStyle = 'rgba(96,165,250,0.15)';
     }
@@ -325,7 +170,7 @@
 
   async function loop(now) {
     if (!running) return;
-    // FPS
+
     frames++;
     if (now - lastTime >= 1000) {
       fps = frames; frames = 0; lastTime = now;
@@ -352,7 +197,7 @@
     const raw = (b.rawValue || '').trim();
     if (!raw || seen.has(raw)) return;
     seen.add(raw);
-    // beep
+
     try { els.beep.currentTime = 0; els.beep.play().catch(()=>{}); } catch {}
     els.lastType.textContent = b.format || '—';
     addResult({
@@ -415,13 +260,11 @@
   }
 
   async function tryToggleTorch(respectSwitch=false) {
-    // Requiere ImageCapture o applyConstraints con torch (soporte variable)
     if (!track) return;
-    const want = respectSwitch ? els.toggleTorch.checked : els.toggleTorch.checked;
+    const want = els.toggleTorch.checked; // simplificado
     try {
       await track.applyConstraints({ advanced: [{ torch: want }] });
     } catch {
-      // algunos navegadores no soportan torch; ocultamos el switch si falla la primera vez
       if (!respectSwitch) {
         document.querySelector('.switch')?.classList.add('hidden');
       }
@@ -476,14 +319,87 @@
       alert('Este navegador no soporta cámara (getUserMedia).');
       return;
     }
-    // solicite permiso una vez para listar cámaras con etiqueta
     try {
       const tmp = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       tmp.getTracks().forEach(t => t.stop());
     } catch {}
     await enumerateCameras();
   })();
+  const els = {
+  // ...los que ya tienes...
+  offers: document.getElementById('offers'),
+  offersStatus: document.getElementById('offersStatus'),
+  manualQuery: document.getElementById('manualQuery'),
+  btnSearch: document.getElementById('btnSearch')
+};
+function renderOffers(off) {
+  els.offers.innerHTML = '';
+  if (!off || !off.length) {
+    els.offersStatus.textContent = 'No encontré ofertas (prueba con otro término).';
+    return;
+  }
+  els.offersStatus.textContent = `${off.length} ofertas encontradas`;
+  for (const o of off) {
+    const div = document.createElement('div');
+    div.className = 'offer';
+    const top = document.createElement('div');
+    top.className = 'row';
+    const left = document.createElement('div');
+    left.innerHTML = `<div><strong>${o.merchant || 'Tienda'}</strong></div>
+                      <div>${o.title || ''}</div>`;
+    const right = document.createElement('div');
+    right.innerHTML = `<div class="price">${o.maybePrice ? o.maybePrice : ''}</div>`;
+    top.appendChild(left); top.appendChild(right);
+
+    const why = document.createElement('div');
+    why.className = 'subtle';
+    why.textContent = o.why || '';
+
+    const link = document.createElement('a');
+    link.href = o.url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = 'Ver tienda →';
+
+    div.appendChild(top);
+    if (o.why) div.appendChild(why);
+    div.appendChild(link);
+    els.offers.appendChild(div);
+  }
+}
+
+async function findOffers({ barcode, query }) {
+  try {
+    els.offersStatus.textContent = 'Buscando…';
+    const resp = await fetch('http://localhost:5174/api/find-product', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ barcode, query })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data?.error || 'Error de búsqueda');
+    renderOffers(data.offers);
+  } catch (err) {
+    console.error(err);
+    els.offersStatus.textContent = `Error: ${err.message || err}`;
+  }
+}
+function onDetect(b) {
+  const raw = (b.rawValue || '').trim();
+  if (!raw || seen.has(raw)) return;
+  seen.add(raw);
+
+  try { els.beep.currentTime = 0; els.beep.play().catch(()=>{}); } catch {}
+  els.lastType.textContent = b.format || '—';
+  addResult({ value: raw, format: b.format || 'desconocido', ts: new Date() });
+
+  // ⬇️ NUEVO: lanzar búsqueda con el código de barras
+  findOffers({ barcode: raw });
+}
+els.btnSearch.addEventListener('click', () => {
+  const q = (els.manualQuery.value || '').trim();
+  if (!q) return;
+  findOffers({ query: q });
+});
+
 })();
-</script>
-</body>
-</html>
