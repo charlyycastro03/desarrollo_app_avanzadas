@@ -1,0 +1,15 @@
+# Desarrollo App Avanzadas — Evidencias (Git + PR + Pages)
+
+En este avance demuestro:
+- Uso de ramas y commits.
+- Pull Request y revisión de cambios (Files changed / Compare).
+- Merge a `main`.
+- Publicación con GitHub Pages.
+
+## Flujo
+1) Rama `feature/readme-pages`.  
+2) Cambios: `README.md` e `index.html` (redirige a `Proyecto_1/index.html`).  
+3) PR, revisión del diff, merge.  
+4) GitHub Pages desde `main` (root).
+
+
